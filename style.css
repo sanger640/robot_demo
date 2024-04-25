@@ -1,0 +1,16 @@
+/* style.css */
+#map {
+    height: 400px;
+    width: 100%;
+}
+button {
+    margin: 10px;
+}
+#routeList {
+    margin-top: 20px;
+}
+.route {
+    background-color: #f2f2f2;
+    padding: 10px;
+    margin-bottom: 5px;
+}

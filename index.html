@@ -1,0 +1,334 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Map with Drawing</title>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+<body>
+    <h1>BH Frontier Task Maker</h1>
+    <button id="startDrawing">New Task</button>
+    <button id="saveRoute">Save Task</button>
+    <div id="map"></div>
+    <div id="routeListContainer">
+        <h2>Saved Routes:</h2>
+        <div id="routeList"></div>
+    </div>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCloHLSuULUMo9cDOR8ozL-KmH3HdZjzbo&callback=initMap&libraries=drawing,places"></script>
+    <script src="script.js"></script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agrobot Route Maker</title>
+<link rel="stylesheet" type="text/css" href="style.css"/>
+<style>
+    body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    padding: 0;
+  }
+    .map-container {
+      position: relative;
+      height: calc(100% - 303px);/*or using height: calc(100% - 303px); for it to be perfectly in line */
+      margin-left: 300px;
+      padding-top: 20;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background-color: #fff; /* Or any color you want */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      justify-content: flex-end;
+      height: 100px;
+    }
+    
+    .header img {
+      height: 100px; /* Adjust as needed */
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .header button, .robot-button, #setTimeButton, #clearLogButton, .footer button {
+    padding: 5px 5px 5px 5px;
+    font-size: 1em; /* Adjust font size for readability */
+    border: none;
+    background: linear-gradient(to bottom, #657383, #5a6268); /* Modern gradient effect */
+    color: white;
+    cursor: pointer;
+    border-radius: 4px; /* Rounded corners */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+  }
+  .header button:hover, .robot-button:hover, #setTimeButton:hover, #clearLogButton:hover, .footer button:hover {
+  background-color: #50595e; /* Color changes on hover */
+}
+.robot-button {
+  width: 100px; /* Set a fixed width for consistency */
+  text-align: center; /* Center the text */
+}
+.robot-button {
+  background: #6c757d; /* A color with better contrast */
+  color: #ffffff;
+}
+    .sidebar {
+      background-color: #484444;
+      color: white;
+      width: 280px;
+      height: 863px;
+      padding: 10px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+    }
+    .sidebar img {
+      height: 47px; /* Adjust as needed */
+      padding: 0px;
+    }
+    .footer {
+    background-color: #484444;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 180px;
+    text-align: center;
+    padding: 10px;
+
+    }
+    #start_icon{
+    position: absolute;
+    left: 190px;
+    bottom: 105px;
+    height: 70px;
+    cursor: pointer; /* Pointer cursor on hover */
+    }
+    .guide-images-container {
+        background-color: #f0ecec;
+  display: flex;
+  flex-wrap: wrap; /* Allows items to wrap onto the next line */
+  justify-content: space-between; /* Spreads out the items evenly */
+  align-items: stretch; /* Stretches items to fill the container */
+  padding-top:280px;
+  margin: 0;
+}
+.log-container {
+  display: flex;
+  justify-content: space-between;
+  height: 163px; /* Adjust as needed */
+  background-color: #282424; /* Choose a background color that fits the design */
+  padding: 10px;
+  overflow-y: auto; /* Allow scrolling if content is too long */
+  color: #fff; /* White text color */
+  font-family: 'Consolas', 'Courier New', monospace; /* Monospaced font for the log */
+  font-size: 16px;
+  position:absolute;/*Absolute to prevent the map from being covered up */
+  left: 300px;
+  right:0;
+  top:700px;
+}
+
+#setTimeButton {
+  position: absolute;/*Update this so that it becomes relative */
+  top: 10; /* Align to the top edge of log-container */
+  right: 550; /* Align to the right edge of log-container */
+  margin: 10px; /* Add some space from the edges */
+  z-index: 2; /* Ensure it's above the log content */
+  height: 30px;
+  cursor: pointer; /* Pointer cursor on hover */
+}
+#clearLogButton {
+  position: absolute;
+  top: 10; /* Align to the top edge of log-container */
+  right: 450; /* Align to the right edge of log-container */
+  margin: 10px; /* Add some space from the edges */
+  z-index: 2; /* Ensure it's above the log content */
+  height: 30px;
+  cursor: pointer; /* Pointer cursor on hover */
+}
+.robot-button {
+    position: absolute;
+  right: 250; /* Align to the right edge of log-container */
+  margin: 10px; /* Add some space from the edges */
+  z-index: 2; /* Ensure it's above the log content */
+  height: 30px;
+  cursor: pointer; /* Pointer cursor on hover */
+}
+.robot-button[data-robot="robot1"] {
+  top: 10; /* Align to the top edge of log-container */
+  right: 270px; /* This positions the second button to the left of the first */
+}
+
+.robot-button[data-robot="robot2"] {
+    top: 10; /* Align to the top edge of log-container */
+  right: 150px; /* This positions the third button to the left of the second */
+}
+
+.robot-button[data-robot="robot3"] {
+    top: 10; /* Align to the top edge of log-container */
+  right: 30px; /* This positions the fourth button to the left of the third */
+}
+.robot-button[data-robot="robot4"] {
+    top: 50; /* Align to the top edge of log-container */
+  right: 270px; /* This positions the second button to the left of the first */
+}
+
+.robot-button[data-robot="robot5"] {
+    top: 50; /* Align to the top edge of log-container */
+  right: 150px; /* This positions the third button to the left of the second */
+}
+
+.robot-button[data-robot="robot6"] {
+    top: 50; /* Align to the top edge of log-container */
+  right: 30px; /* This positions the fourth button to the left of the third */
+}
+.robot-button[data-robot="robot7"] {
+    top: 90; /* Align to the top edge of log-container */
+  right: 270px; /* This positions the second button to the left of the first */
+}
+
+.robot-button[data-robot="robot8"] {
+    top: 90; /* Align to the top edge of log-container */
+  right: 150px; /* This positions the third button to the left of the second */
+}
+
+.robot-button[data-robot="robot9"] {
+    top: 90; /* Align to the top edge of log-container */
+  right: 30px; /* This positions the fourth button to the left of the third */
+}
+.log {
+
+  color: #fff; /* White text color */
+  font-family: 'Consolas', 'Courier New', monospace; /* Monospaced font for the log */
+  font-size: 16px;
+}
+.guide-images-container img {
+  flex-basis: calc(50%); /* Adjust width minus the gap between images */
+  max-width: calc(50%); /* Adjust maximum width minus the gap */
+  box-sizing: border-box; /* Include padding and borders in the element's width and height */
+  height: auto; /* Maintain aspect ratio */
+  margin-bottom: 0px; /* Space between rows, adjust as needed */
+
+}
+    .route-container {
+  margin-top: 20px; /* Add space at the top inside the sidebar */
+}
+
+/* Style for each route */
+.route {
+  background-color: #333; /* Dark background for each route */
+  border-radius: 5px; /* Rounded corners */
+  margin-bottom: 10px; /* Space between routes */
+  padding: 5px; /* Padding inside each route */
+  display: flex;
+  justify-content: space-between; /* Space elements inside each route */
+  align-items: center;
+}
+
+.route-name {
+  color: #fff; /* White text for route name */
+  font-size: 16px; /* Larger font size for readability */
+  flex-grow: 1; /* Allow the name to take up available space */
+  margin-right: 10px; /* Space before the buttons */
+}
+
+/* General style for buttons */
+.route-button {
+  background-color: #555; /* Slightly lighter background for buttons */
+  color: #fff; /* White text for buttons */
+  border: none; /* Remove border */
+  border-radius: 3px; /* Rounded corners for buttons */
+  padding: 5px 10px; /* Padding inside buttons */
+  cursor: pointer; /* Pointer cursor on hover */
+  margin-left: 5px; /* Space between buttons */
+}
+
+
+.route-button:hover {
+  background-color: #777; /* Lighter background for hover state */
+}
+
+  #map {
+    top: 100;
+    width: 100%;
+    height: 100%; /* This will take the remaining height after the header and sidebar */
+  }
+  #routeListContainer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200px;
+    background-color: #fff;
+    z-index: 10;
+  }
+</style>
+</head>
+
+<body>
+    <div class="map-container">
+        <div id="map">
+            <!-- Map content will go here -->
+          </div>
+        <div class="header">
+          <img src="top_logo.png" alt="Agrobot Logo">
+          <button id="startDrawing">New Task</button>
+          <button id="saveRoute">Save Task</button>
+        </div>
+    
+      </div>
+<div class="sidebar">
+  <!-- Navigation items here -->
+  <img src="top_left_logo.png" alt="Agrobot Logo">
+  <img src="route_history_header.png" alt="a subheader for routes">
+  <!-- ... other items ... -->
+  <div class="route-container">
+    <!-- Routes will be dynamically inserted here -->
+    <div id="routeList"></div>
+  </div>
+</div>
+
+
+<div class="log-container">
+    <button id="setTimeButton" class="setTimeButton">Set Time</button>
+    <button class="robot-button" data-robot="robot1">Agrobot 1</button>
+    <button class="robot-button" data-robot="robot2">Agrobot 2</button>
+    <button class="robot-button" data-robot="robot3">Agrobot 3</button>
+    <button class="robot-button" data-robot="robot4">Agrobot 4</button>
+    <button class="robot-button" data-robot="robot5">Agrobot 5</button>
+    <button class="robot-button" data-robot="robot6">Agrobot 6</button>
+    <button class="robot-button" data-robot="robot7">Agrobot 7</button>
+    <button class="robot-button" data-robot="robot8">Agrobot 8</button>
+    <button class="robot-button" data-robot="robot9">Agrobot 9</button>
+    <button id="clearLogButton">Clear Log</button>
+    <div id="log">Task Running:<br>></div>
+  </div>
+  </div>
+
+
+<div class="footer">
+  <!-- Footer content here -->
+  <img id="start_icon" src="start_icon.png" alt="Path">
+  <button>Log In     </button>
+</div>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDFvFsJQuSIqeGjvz5stsokq8WmC37eCVg&callback=initMap&libraries=drawing,places"></script>
+<script src="script.js"></script>
+<div class="guide-images-container">
+    <img src="guide_images/path.png" alt="Path">
+    <img src="guide_images/recharge.png" alt="Recharge">
+    <img src="guide_images/sequences.png" alt="Sequences">
+    <img src="guide_images/con_treatment.png" alt="Con treatment">
+  </div>  
+</body>
+</html>
